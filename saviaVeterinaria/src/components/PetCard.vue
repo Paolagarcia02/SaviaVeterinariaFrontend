@@ -9,7 +9,8 @@ defineProps<{
         name: string;       
         species: string;    
         photo_url: string;   
-    }
+    };
+    hideButton?: boolean;
 }>();
 </script>
 
@@ -23,7 +24,11 @@ defineProps<{
                 <h3 class="adoption-card__name">{{ pet.name }}</h3>
                 <p class="adoption-card__desc">{{ pet.species }}</p>
             </div>
-            <router-link :to="'/pet/' + pet.pet_id" class="btn btn--primary btn-card">
+            <router-link 
+                v-if="!hideButton"
+                :to="'/pet/' + pet.pet_id" 
+                class="btn btn--primary btn-card"
+            >
                 Conóceme
             </router-link>
         </div>

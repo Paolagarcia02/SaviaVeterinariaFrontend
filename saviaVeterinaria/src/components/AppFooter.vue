@@ -13,14 +13,13 @@
                 <p class="footer__slogan">Cuidamos vidas, unimos familias.</p>
             </div>
 
-            <!-- Sección de enlaces de navegación -->
             <div class="footer__column">
                 <h3 class="footer__title">Explora</h3>
                 <ul class="footer__list">
                     <li><router-link to="/" class="footer__link">Inicio</router-link></li>
                     <li><router-link to="/pets" class="footer__link">Mascotas</router-link></li>
-                    <li><a href="./service.html" class="footer__link">Servicios</a></li>
-                    <li><a href="./contact.html" class="footer__link">Contacto</a></li>
+                    <li><router-link to="/services" class="footer__link">Servicios</router-link></li>
+                    <li><router-link to="/contact" class="footer__link">Contacto</router-link></li>
                 </ul>
             </div>
 
