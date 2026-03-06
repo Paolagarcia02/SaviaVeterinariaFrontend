@@ -1,16 +1,9 @@
 <script setup lang="ts">
-/**
- * Componente AdminSidebar
- * Barra lateral de navegación del panel de administración
- * Permite cambiar entre las diferentes secciones (mascotas, usuarios, etc.)
- */
-
-// Props: recibe la pestaña activa actual
 defineProps<{
-    activeTab: string
+    activeTab: string;
+    isUserPanel?: boolean;
 }>();
 
-// Emits: emite un evento cuando se cambia de pestaña
 const emit = defineEmits<{
     (e: 'changeTab', tab: string): void
 }>();
@@ -22,32 +15,63 @@ const emit = defineEmits<{
             <div class="logo-wrapper">
                 <img src="@/assets/images/home/logoHomeSinFondo.png" class="sidebar-logo" alt="Logo">
             </div>
-            <h2 class="sidebar-title">SAVIA Admin</h2>
+            <h2 class="sidebar-title">{{ isUserPanel ? 'Mi Panel' : 'SAVIA Admin' }}</h2>
         </div>
 
         <nav class="sidebar-nav">
-            <button 
-                @click="emit('changeTab', 'pets')" 
-                :class="['nav-item', { 'active': activeTab === 'pets' }]"
-            >
-                <span class="nav-icon">🐾</span>
-                <span class="nav-text">Mascotas</span>
-            </button>
+            <template v-if="isUserPanel">
+                <button 
+                    @click="emit('changeTab', 'dashboard')" 
+                    :class="['nav-item', { 'active': activeTab === 'dashboard' }]"
+                >
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </button>
 
-            <button 
-                @click="emit('changeTab', 'users')" 
-                :class="['nav-item', { 'active': activeTab === 'users' }]"
-            >
-                <span class="nav-icon">👥</span>
-                <span class="nav-text">Usuarios</span>
-            </button>
+                <button 
+                    @click="emit('changeTab', 'pets')" 
+                    :class="['nav-item', { 'active': activeTab === 'pets' }]"
+                >
+                    <span class="nav-icon">🐾</span>
+                    <span class="nav-text">Mis Mascotas</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'applications')" 
+                    :class="['nav-item', { 'active': activeTab === 'applications' }]"
+                >
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Solicitudes</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'profile')" 
+                    :class="['nav-item', { 'active': activeTab === 'profile' }]"
+                >
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Mi Perfil</span>
+                </button>
+            </template>
+
+            <template v-else>
+                <button 
+                    @click="emit('changeTab', 'pets')" 
+                    :class="['nav-item', { 'active': activeTab === 'pets' }]"
+                >
+                    <span class="nav-icon">🐾</span>
+                    <span class="nav-text">Mascotas</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'users')" 
+                    :class="['nav-item', { 'active': activeTab === 'users' }]"
+                >
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Usuarios</span>
+                </button>
+            </template>
 
             <div class="sidebar-divider"></div>
-
-            <router-link to="/users" class="nav-item">
-                <span class="nav-icon">📋</span>
-                <span class="nav-text">Ver Usuarios Público</span>
-            </router-link>
 
             <router-link to="/" class="nav-item back-link">
                 <span class="nav-icon">🏠</span>

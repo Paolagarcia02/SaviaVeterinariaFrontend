@@ -59,7 +59,6 @@ const filteredPets = computed(() => {
                         <option value="all">Todos los estados</option>
                         <option value="En Adopción">En Adopción</option>
                         <option value="Adoptado">Adoptado</option>
-                        <option value="Con Dueño">Con Dueño</option>
                     </select>
                 </div>
             </div>

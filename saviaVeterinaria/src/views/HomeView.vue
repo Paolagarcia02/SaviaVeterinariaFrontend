@@ -3,20 +3,38 @@
  * Vista principal (Home)
  * Muestra el hero, valores de la clínica, carrusel de mascotas y servicios
  */
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { usePetStore } from '@/stores/petStore';
 import PetCard from '@/components/PetCard.vue';
+import axios from 'axios';
 
 const petStore = usePetStore();
 const carouselTrack = ref<HTMLElement | null>(null);
+const dailyQuote = ref('');
+const carouselFilter = ref('En Adopción');
 
 const loadPets = async () => {
     await petStore.fetchPets();
 };
 
+const loadDailyQuote = async () => {
+    try {
+        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8407';
+        const response = await axios.get(`${baseURL}/api/Api/DailyQuote`);
+        dailyQuote.value = response.data.quote || 'El amor por los animales eleva el nivel cultural del pueblo.';
+    } catch (error) {
+        dailyQuote.value = 'El amor por los animales eleva el nivel cultural del pueblo.';
+    }
+};
+
+const filteredPets = computed(() => {
+    return petStore.pets.filter(pet => pet.status === carouselFilter.value);
+});
+
 // Cuando la página se monta, cargamos las mascotas
 onMounted(() => {
     loadPets();
+    loadDailyQuote();
 });
 
 // Función para desplazar el carrusel hacia la derecha
@@ -42,6 +60,9 @@ const scrollPrev = () => {
                 <span>Unimos familias.</span>
             </h1>
             <p class="hero__subtitle">Clínica veterinaria y centro de adopción.</p>
+            <div class="daily-quote">
+                <p class="quote-text">“{{ dailyQuote }}”</p>
+            </div>
         </section>
 
         <section class="photos-simple">
@@ -52,8 +73,8 @@ const scrollPrev = () => {
         </section>
 
         <section class="home-cta">
-            <router-link to="/appointments" class="btn btn--primary">¡Pide cita!</router-link>
-            <router-link to="/pets" class="btn btn--secondary">Ver todas las mascotas</router-link>
+            <router-link to="/appointment" class="btn btn--primary">¡Pide cita!</router-link>
+            <router-link to="/adoption" class="btn btn--secondary">¡Adopta aquí!</router-link>
         </section>
 
         <section class="values">
@@ -76,12 +97,32 @@ const scrollPrev = () => {
 
         <section class="adoptions">
             <h2 class="adoptions__title">Conoce a nuestros pequeños</h2>
+            
+            <div class="carousel-filters">
+                <button 
+                    :class="['filter-btn', { active: carouselFilter === 'En Adopción' }]"
+                    @click="carouselFilter = 'En Adopción'"
+                >
+                    En Adopción
+                </button>
+                <button 
+                    :class="['filter-btn', { active: carouselFilter === 'Adoptado' }]"
+                    @click="carouselFilter = 'Adoptado'"
+                >
+                    Adoptado
+                </button>
+            </div>
 
             <div class="carousel-container">
                 <button @click="scrollPrev" class="carousel-btn prev">❮</button>
 
                 <div class="carousel-track" ref="carouselTrack">
-                    <PetCard v-for="pet in petStore.pets" :key="pet.pet_id" :pet="pet" />
+                    <PetCard 
+                        v-for="pet in filteredPets" 
+                        :key="pet.pet_id" 
+                        :pet="pet"
+                        :hideButton="carouselFilter === 'Adoptado'"
+                    />
                 </div>
 
                 <button @click="scrollNext" class="carousel-btn next">❯</button>
@@ -154,6 +195,25 @@ const scrollPrev = () => {
         color: v.$color-green-dark;
         margin-top: 20px;
     }
+}
+
+.daily-quote {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.quote-text {
+    font-family: v.$font-subtitle;
+    font-size: 1.1rem;
+    color: v.$color-green-dark;
+    font-style: italic;
+    margin: 0;
 }
 
 /* PHOTOS */
@@ -245,6 +305,36 @@ const scrollPrev = () => {
         font-size: 2.9rem;
         color: v.$color-green-dark;
         margin-bottom: 40px;
+    }
+}
+
+.carousel-filters {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.filter-btn {
+    padding: 10px 25px;
+    border: 2px solid v.$color-green-dark;
+    background: transparent;
+    color: v.$color-green-dark;
+    border-radius: 25px;
+    font-family: v.$font-subtitle;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+        background: v.$color-green-dark;
+        color: white;
+    }
+
+    &.active {
+        background: v.$color-peach-dark;
+        border-color: v.$color-peach-dark;
+        color: white;
     }
 }
 
