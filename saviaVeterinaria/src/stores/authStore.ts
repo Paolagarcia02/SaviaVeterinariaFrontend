@@ -1,31 +1,33 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
-// Store para manejar la autenticación del usuario
 export const useAuthStore = defineStore('auth', () => {
-    // Estado: token y rol del usuario (se guardan en localStorage)
-    const token = ref(localStorage.getItem('token') || '');
-    const userRole = ref(localStorage.getItem('userRole') || ''); 
+    const token = ref(sessionStorage.getItem('token') || '');
+    const userRole = ref(sessionStorage.getItem('userRole') || ''); 
+    const userId = ref(parseInt(sessionStorage.getItem('userId') || '0'));
 
-    // Getters: propiedades calculadas
-    const isLogged = computed(() => !!token.value); // true si hay token
-    const isAdmin = computed(() => userRole.value === 'Admin'); // true si es admin
+    const isLogged = computed(() => !!token.value);
+    const isAdmin = computed(() => userRole.value === 'Admin');
+    const isVet = computed(() => userRole.value === 'Vet');
+    const canAccessAdmin = computed(() => isAdmin.value || isVet.value);
 
-    // Action: guardar datos de login
-    function login(newToken: string, role: string) {
+    function login(newToken: string, role: string, id?: number) {
         token.value = newToken;
         userRole.value = role;
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('userRole', role);
+        userId.value = id || 0;
+        sessionStorage.setItem('token', newToken);
+        sessionStorage.setItem('userRole', role);
+        sessionStorage.setItem('userId', (id || 0).toString());
     }
 
-    // Action: cerrar sesión
     function logout() {
         token.value = '';
         userRole.value = '';
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
+        userId.value = 0;
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('userId');
     }
 
-    return { token, userRole, isLogged, isAdmin, login, logout };
+    return { token, userRole, userId, isLogged, isAdmin, isVet, canAccessAdmin, login, logout };
 });

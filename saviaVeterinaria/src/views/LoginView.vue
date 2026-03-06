@@ -15,22 +15,16 @@ const router = useRouter();
 const authStore = useAuthStore();
 const errorMessage = ref('');
 
-// Función que maneja el envío del formulario de login
 const handleLogin = async () => {
     errorMessage.value = '';
     try {
-        // Enviamos las credenciales al backend
         const response = await api.post('/Auth/login', {
             email: email.value,
             password: password.value
         });
 
-        console.log("¿Qué hay dentro de response.data?:", response.data);
-
-        // Guardamos el token y el rol en el store y localStorage
-        authStore.login(response.data.token, response.data.role);
+        authStore.login(response.data.token, response.data.role, response.data.userId);
         
-        // Mostramos mensaje de éxito
         Swal.fire({
             position: "top-end",
             icon: "success",

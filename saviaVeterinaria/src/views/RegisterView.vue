@@ -16,18 +16,30 @@ const confirmPassword = ref('');
 const errorMessage = ref('');
 const terms = ref(false); // Aceptación de términos y condiciones
 
-// Función que maneja el envío del formulario de registro
 const handleRegister = async () => {
     errorMessage.value = '';
 
-    // Validamos que las contraseñas coincidan
     if (password.value !== confirmPassword.value) {
         errorMessage.value = "Las contraseñas no coinciden.";
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: errorMessage.value,
+        });
+        return;
+    }
+
+    if (password.value.length < 8) {
+        errorMessage.value = "La contraseña debe tener al menos 8 caracteres.";
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: errorMessage.value,
+        });
         return;
     }
 
     try {
-        // Enviamos los datos del nuevo usuario al backend
         await api.post('/Auth/register', {
             userName: fullName.value,
             email: email.value,
