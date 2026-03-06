@@ -1,0 +1,46 @@
+@use '../base/variables' as v;
+
+.btn {
+  color: v.$color-green-dark;
+  background-color: v.$color-peach-medium;
+  padding: 5px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-family: v.$font-title;
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: v.$color-peach-ligth;
+    transform: translateY(-3px);
+  }
+
+  @media (min-width: 576px) {
+    font-size: 1.6rem;
+    padding: 20px 40px;
+    min-width: 220px;
+  }
+
+  &--primary {
+    background-color: v.$color-peach-medium;
+
+    &:hover {
+      background-color: v.$color-peach-dark;
+    }
+  }
+
+  &--secondary {
+    background-color: v.$color-peach-ligth;
+
+    &:hover {
+      background-color: v.$color-peach-medium;
+    }
+  }
+
+  &--small {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    min-width: auto;
+  }
+}
