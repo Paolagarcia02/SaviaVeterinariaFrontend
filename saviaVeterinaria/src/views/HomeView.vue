@@ -6,12 +6,28 @@
 import { ref, onMounted, computed } from 'vue';
 import { usePetStore } from '@/stores/petStore';
 import PetCard from '@/components/PetCard.vue';
-import axios from 'axios';
+import HomeServiceCard from '@/components/HomeServiceCard.vue';
+import api from '@/api/axios';
+import medicinaPreventivaImg from '@/assets/images/home/medicinaPreventiva.png';
+import cirugiaAvanzadaImg from '@/assets/images/home/cirugíaAvanzada.png';
+import diagnosticoImagenImg from '@/assets/images/home/diagnosticoImagen.png';
+import planesBienestarImg from '@/assets/images/home/planesBienestar.png';
+import laboratorioClinicoImg from '@/assets/images/home/laboratorioClínico.png';
+import urgenciasImg from '@/assets/images/home/urgencias.png';
 
 const petStore = usePetStore();
 const carouselTrack = ref<HTMLElement | null>(null);
-const dailyQuote = ref('');
+const defaultQuote = 'El amor por los animales eleva el nivel cultural del pueblo.';
+const dailyQuote = ref(defaultQuote);
 const carouselFilter = ref('En Adopción');
+const homeServices = [
+    { title: 'Medicina Preventiva', image: medicinaPreventivaImg },
+    { title: 'Cirugía avanzada', image: cirugiaAvanzadaImg },
+    { title: 'Diagnóstico por imagen', image: diagnosticoImagenImg },
+    { title: 'Planes de bienestar', image: planesBienestarImg },
+    { title: 'Laboratorio de análisis clínico', image: laboratorioClinicoImg },
+    { title: 'Urgencias 24h', image: urgenciasImg, isUrgent: true }
+];
 
 const loadPets = async () => {
     await petStore.fetchPets();
@@ -19,11 +35,10 @@ const loadPets = async () => {
 
 const loadDailyQuote = async () => {
     try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8407';
-        const response = await axios.get(`${baseURL}/api/Api/DailyQuote`);
-        dailyQuote.value = response.data.quote || 'El amor por los animales eleva el nivel cultural del pueblo.';
+        const response = await api.get('/DailyQuote');
+        dailyQuote.value = response.data?.mensaje || response.data?.quote || defaultQuote;
     } catch (error) {
-        dailyQuote.value = 'El amor por los animales eleva el nivel cultural del pueblo.';
+        dailyQuote.value = defaultQuote;
     }
 };
 
@@ -132,30 +147,35 @@ const scrollPrev = () => {
         <section class="services">
             <h2 class="services__title">Servicios veterinarios de excelencia</h2>
             <div class="services__grid">
-                <div class="service-card">
-                    <img src="@/assets/images/home/medicinaPreventiva.png" alt="">
-                    <h3>Medicina Preventiva</h3>
-                </div>
-                <div class="service-card">
-                    <img src="@/assets/images/home/cirugíaAvanzada.png" alt="">
-                    <h3>Cirugía avanzada</h3>
-                </div>
-                <div class="service-card">
-                    <img src="@/assets/images/home/diagnosticoImagen.png" alt="">
-                    <h3>Diagnóstico por imagen</h3>
-                </div>
-                <div class="service-card">
-                    <img src="@/assets/images/home/planesBienestar.png" alt="">
-                    <h3>Planes de bienestar</h3>
-                </div>
-                <div class="service-card">
-                    <img src="@/assets/images/home/laboratorioClínico.png" alt="">
-                    <h3>Laboratorio de análisis clínico</h3>
-                </div>
-                <div class="service-card service-card--urgent">
-                    <img src="@/assets/images/home/urgencias.png" alt="">
-                    <h3>Urgencias 24h</h3>
-                </div>
+                <HomeServiceCard
+                    v-for="service in homeServices"
+                    :key="service.title"
+                    :title="service.title"
+                    :image="service.image"
+                    :isUrgent="service.isUrgent"
+                />
+            </div>
+        </section>
+
+        <section class="ods">
+            <h2 class="ods__title">Nuestro proyecto y los ODS</h2>
+            <p class="ods__subtitle">SAVIA contribuye a estos 3 Objetivos de Desarrollo Sostenible:</p>
+            <div class="ods__grid">
+                <article class="ods-card">
+                    <span class="ods-card__badge">ODS 3</span>
+                    <h3>Salud y bienestar</h3>
+                    <p>Mejoramos la salud animal con prevención, diagnóstico y seguimiento veterinario.</p>
+                </article>
+                <article class="ods-card">
+                    <span class="ods-card__badge">ODS 12</span>
+                    <h3>Producción y consumo responsables</h3>
+                    <p>Fomentamos la adopción responsable y reducimos el abandono animal.</p>
+                </article>
+                <article class="ods-card">
+                    <span class="ods-card__badge">ODS 15</span>
+                    <h3>Vida de ecosistemas terrestres</h3>
+                    <p>Protegemos la fauna doméstica y promovemos su cuidado ético y sostenible.</p>
+                </article>
             </div>
         </section>
     </main>
@@ -411,34 +431,76 @@ const scrollPrev = () => {
     }
 }
 
-.service-card {
-    border: 1.5px solid v.$color-green-dark;
-    border-radius: 15px;
-    padding: 40px 20px;
-    transition: all 0.3s ease;
+.ods {
+    padding: 70px 20px 100px;
 
-    img {
-        width: 80px;
-        margin-bottom: 25px;
-    }
-
-    h3 {
+    &__title {
         font-family: v.$font-title;
+        font-size: 1.95rem;
         color: v.$color-green-dark;
+        margin-bottom: 8px;
     }
 
-    &:hover {
-        transform: translateY(-5px);
-        background: rgba(0, 0, 0, 0.02);
+    &__subtitle {
+        font-family: v.$font-subtitle;
+        color: #355646;
+        margin-bottom: 22px;
+        font-size: 0.98rem;
     }
 
-    &--urgent {
-        background: v.$color-peach-ligth;
-        border-color: v.$color-peach-dark;
+    &__grid {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
 
-        h3 {
-            color: v.$color-peach-dark;
+        @media (min-width: 900px) {
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 }
+
+.ods-card {
+    background: transparent;
+    border: 1px solid rgba(50, 82, 67, 0.22);
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-align: left;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+        border-color: rgba(50, 82, 67, 0.4);
+    }
+
+    h3 {
+        margin: 0 0 7px;
+        font-family: v.$font-title;
+        color: v.$color-green-dark;
+        font-size: 1.15rem;
+    }
+
+    p {
+        margin: 0;
+        font-family: v.$font-subtitle;
+        color: v.$color-green-dark;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+}
+
+.ods-card__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-family: v.$font-subtitle;
+    font-weight: v.$weight-bold;
+    font-size: 0.92rem;
+    background: rgba(247, 198, 164, 0.55);
+    color: v.$color-green-dark;
+    margin-bottom: 8px;
+}
+
 </style>

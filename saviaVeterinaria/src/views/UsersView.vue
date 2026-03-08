@@ -1,267 +1,642 @@
 <script setup lang="ts">
-/**
- * Vista de Usuarios
- * Muestra un listado de todos los usuarios registrados
- * Solo accesible para administradores
- */
 import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
-import api from '@/api/axios';
-import type { User } from '@/models/type';
+import Swal from 'sweetalert2';
+import { useAuthStore } from '@/stores/authStore';
+import { useUserPanelStore } from '@/stores/userPanelStore';
+import AdminSidebar from '@/components/Admin/AdminSidebar.vue';
+import UserPetFormModal from '@/components/UserPanel/UserPetFormModal.vue';
+import ApplicationDetailModal from '@/components/UserPanel/ApplicationDetailModal.vue';
+import UserPetRow from '@/components/UserPanel/UserPetRow.vue';
+import type { Pet, AdoptionApplication, User } from '@/models/type';
 
-const authStore = useAuthStore();
-const router = useRouter();
-
-// Lista de usuarios
-const users = ref<User[]>([]);
-
-// Estado de carga
-const loading = ref(true);
-
-// Filtros de búsqueda
-const searchQuery = ref('');
-const selectedRole = ref('all');
-
-// Al montar el componente, verificamos permisos y cargamos usuarios
-onMounted(async () => {
-    // Si no es admin, redirigimos a la página principal
-    if (!authStore.isAdmin) {
-        router.push('/');
-        return;
-    }
-    await loadUsers();
-});
-
-// Función para cargar la lista de usuarios desde el backend
-const loadUsers = async () => {
-    try {
-        const response = await api.get('/User');
-        users.value = response.data;
-    } catch (error) {
-        console.error('Error cargando usuarios:', error);
-    } finally {
-        loading.value = false;
-    }
+type UserPetUpdatePayload = {
+  pet_id: number;
+  name?: string;
+  species?: string;
+  breed?: string;
+  birth_date?: string;
+  description?: string;
+  status?: Pet['status'];
+  photo_url?: string | null;
 };
 
-// Computed: filtra los usuarios según rol y texto de búsqueda
-const filteredUsers = computed(() => {
-    let result = users.value;
+const router = useRouter();
+const authStore = useAuthStore();
+const userPanelStore = useUserPanelStore();
 
-    // Filtrar por rol si no es "all"
-    if (selectedRole.value !== 'all') {
-        result = result.filter(user => user.role === selectedRole.value);
-    }
+const currentTab = ref('dashboard');
 
-    // Filtrar por texto de búsqueda (nombre o email)
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(user => 
-            user.full_name.toLowerCase().includes(query) || 
-            user.email.toLowerCase().includes(query)
-        );
-    }
+const showPetModal = ref(false);
+const editingPet = ref<Pet | null>(null);
 
-    return result;
+const showApplicationModal = ref(false);
+const selectedApplication = ref<AdoptionApplication | null>(null);
+
+const expandedAppointmentId = ref<number | null>(null);
+
+const profileForm = ref({
+  full_name: '',
+  email: '',
+  password: '',
+  role: 'User' as User['role'],
+  franchise_id: 0
 });
+
+const appointmentList = computed(() => {
+  return [...userPanelStore.appointments].sort((a, b) => {
+    const bTime = b.date_time ? new Date(b.date_time).getTime() : 0;
+    const aTime = a.date_time ? new Date(a.date_time).getTime() : 0;
+    return bTime - aTime;
+  });
+});
+
+const loadPanel = async () => {
+  try {
+    await userPanelStore.fetchAll(authStore.userId);
+
+    if (userPanelStore.profile) {
+      profileForm.value.full_name = userPanelStore.profile.full_name;
+      profileForm.value.email = userPanelStore.profile.email;
+      profileForm.value.role = userPanelStore.profile.role;
+      profileForm.value.franchise_id = userPanelStore.profile.franchise_id || 0;
+      profileForm.value.password = '';
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo cargar tu panel.'
+    });
+  }
+};
+
+onMounted(async () => {
+  if (!authStore.isLogged) {
+    router.push('/auth/login');
+    return;
+  }
+
+  if (authStore.canAccessAdmin) {
+    router.push('/admin');
+    return;
+  }
+
+  await loadPanel();
+});
+
+const openPetModal = (pet: Pet) => {
+  editingPet.value = pet;
+  showPetModal.value = true;
+};
+
+const closePetModal = () => {
+  editingPet.value = null;
+  showPetModal.value = false;
+};
+
+const savePet = async (petData: UserPetUpdatePayload) => {
+  try {
+    await userPanelStore.updatePet(petData);
+    await userPanelStore.fetchPets();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Mascota actualizada'
+    });
+
+    closePetModal();
+  } catch (error: any) {
+    const backendData = error?.response?.data;
+    const backendMessage =
+      backendData?.message ||
+      backendData?.title ||
+      (typeof backendData === 'string' ? backendData : '');
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: backendMessage || 'No se pudo actualizar la mascota.'
+    });
+  }
+};
+
+const deletePet = async (pet: Pet) => {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: `¿Eliminar a ${pet.name}?`,
+    text: 'Esta acción no se puede deshacer.',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await userPanelStore.deletePet(pet.pet_id);
+    await userPanelStore.fetchPets();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Mascota eliminada'
+    });
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo eliminar la mascota.'
+    });
+  }
+};
+
+const openApplicationDetail = (application: AdoptionApplication) => {
+  selectedApplication.value = {
+    ...application,
+    pet_name: getPetName(application.pet_id)
+  };
+  showApplicationModal.value = true;
+};
+
+const closeApplicationModal = () => {
+  selectedApplication.value = null;
+  showApplicationModal.value = false;
+};
+
+const saveProfile = async () => {
+  try {
+    const payload: Partial<User> = {
+      full_name: profileForm.value.full_name,
+      email: profileForm.value.email
+    };
+
+    if (profileForm.value.password.trim()) {
+      payload.password = profileForm.value.password;
+    }
+
+    await userPanelStore.updateProfile(payload, authStore.userId);
+    await userPanelStore.fetchProfile(authStore.userId);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Perfil actualizado'
+    });
+
+    profileForm.value.password = '';
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo actualizar tu perfil.'
+    });
+  }
+};
+
+const toggleAppointmentDetails = (appointmentId: number) => {
+  expandedAppointmentId.value = expandedAppointmentId.value === appointmentId ? null : appointmentId;
+};
+
+const getPetName = (petId: number) => {
+  const pet = userPanelStore.pets.find((item) => item.pet_id === petId);
+  return pet ? pet.name : `Mascota #${petId}`;
+};
+
+const getLabTestsForAppointment = (appointmentId: number) => {
+  return userPanelStore.labTests.filter((test) => test.appointment_id === appointmentId);
+};
+
+const formatAppointmentDateTime = (value?: string | null) => {
+  if (!value) return 'Pendiente de asignar';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Pendiente de asignar';
+  return date.toLocaleString('es-ES');
+};
+
 </script>
 
 <template>
-    <main class="users-page">
-        <section class="users-hero">
-            <h1 class="users-hero__title">Gestión de Usuarios</h1>
-            <p class="users-hero__subtitle">Administra los usuarios del sistema</p>
+  <div class="panel-layout">
+    <AdminSidebar :activeTab="currentTab" :isUserPanel="true" @changeTab="(tab: string) => currentTab = tab" />
+
+    <main class="panel-content">
+      <div v-if="userPanelStore.loading" class="loading">Cargando tu panel...</div>
+
+      <template v-else>
+        <section v-if="currentTab === 'dashboard'" class="panel-section">
+          <h1>Mi Panel</h1>
+          <div class="stats-grid">
+            <article class="stat-card">
+              <h3>Mis Mascotas</h3>
+              <p>{{ userPanelStore.pets.length }}</p>
+            </article>
+            <article class="stat-card">
+              <h3>Solicitudes</h3>
+              <p>{{ userPanelStore.applications.length }}</p>
+            </article>
+            <article class="stat-card">
+              <h3>Mis Citas</h3>
+              <p>{{ userPanelStore.appointments.length }}</p>
+            </article>
+            <article class="stat-card">
+              <h3>Lab Tests</h3>
+              <p>{{ userPanelStore.labTests.length }}</p>
+            </article>
+          </div>
         </section>
 
-        <section class="users-filters">
-            <div class="container">
-                <div class="filters-wrapper">
-                    <input 
-                        v-model="searchQuery" 
-                        type="text" 
-                        class="search-input" 
-                        placeholder="Buscar por nombre o email..."
-                    >
-                    
-                    <select v-model="selectedRole" class="role-select">
-                        <option value="all">Todos los roles</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Vet">Veterinario</option>
-                        <option value="User">Usuario</option>
-                    </select>
-                </div>
-            </div>
+        <section v-if="currentTab === 'pets'" class="panel-section">
+          <h1>Mis Mascotas</h1>
+          <div v-if="userPanelStore.pets.length === 0" class="empty-state">
+            No tienes mascotas registradas.
+          </div>
+          <div v-else class="table-wrapper">
+            <table class="panel-table panel-table--pets">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Nombre</th>
+                  <th>Especie</th>
+                  <th>Raza</th>
+                  <th>Estado</th>
+                  <th>Nacimiento</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <UserPetRow
+                  v-for="pet in userPanelStore.pets"
+                  :key="pet.pet_id"
+                  :pet="pet"
+                  @edit="openPetModal"
+                  @delete="deletePet"
+                />
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        <section class="users-list">
-            <div class="container">
-                <div v-if="loading" class="loading">Cargando usuarios...</div>
-                
-                <div v-else-if="filteredUsers.length === 0" class="no-results">
-                    No se encontraron usuarios con esos criterios
-                </div>
-                
-                <div v-else class="table-wrapper">
-                    <table class="users-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Rol</th>
-                                <th>Fecha de Registro</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="user in filteredUsers" :key="user.user_id">
-                                <td>{{ user.user_id }}</td>
-                                <td><strong>{{ user.full_name }}</strong></td>
-                                <td>{{ user.email }}</td>
-                                <td>
-                                    <span :class="['role-badge', user.role.toLowerCase()]">
-                                        {{ user.role }}
-                                    </span>
-                                </td>
-                                <td>{{ new Date(user.created_at).toLocaleDateString('es-ES') }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <section v-if="currentTab === 'applications'" class="panel-section">
+          <h1>Mis Solicitudes</h1>
+          <div class="table-wrapper">
+            <table class="panel-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Mascota</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="application in userPanelStore.applications" :key="application.application_id">
+                  <td>{{ application.application_id }}</td>
+                  <td>{{ getPetName(application.pet_id) }}</td>
+                  <td>{{ application.status }}</td>
+                  <td>{{ new Date(application.application_date).toLocaleDateString('es-ES') }}</td>
+                  <td>
+                    <button class="btn-small btn-view" @click="openApplicationDetail(application)">Abrir</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
+
+        <section v-if="currentTab === 'appointments'" class="panel-section">
+          <h1>Mis Citas y Lab Tests</h1>
+          <div class="table-wrapper">
+            <table class="panel-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Mascota</th>
+                  <th>Estado</th>
+                  <th>Motivo</th>
+                  <th>Lab Tests</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="appointment in appointmentList" :key="appointment.appointment_id">
+                  <tr>
+                    <td>{{ formatAppointmentDateTime(appointment.date_time) }}</td>
+                    <td>{{ getPetName(appointment.pet_id) }}</td>
+                    <td>{{ appointment.status }}</td>
+                    <td>{{ appointment.reason }}</td>
+                    <td>
+                      <button class="btn-small btn-view" @click="toggleAppointmentDetails(appointment.appointment_id)">
+                        Ver ({{ getLabTestsForAppointment(appointment.appointment_id).length }})
+                      </button>
+                    </td>
+                  </tr>
+                  <tr v-if="expandedAppointmentId === appointment.appointment_id">
+                    <td colspan="5" class="labs-cell">
+                      <div v-if="getLabTestsForAppointment(appointment.appointment_id).length === 0">
+                        No hay lab tests para esta cita.
+                      </div>
+                      <ul v-else class="labs-list">
+                        <li v-for="test in getLabTestsForAppointment(appointment.appointment_id)" :key="test.test_id">
+                          <strong>{{ test.test_type }}</strong> - {{ test.status }}
+                          <span v-if="test.comments"> | {{ test.comments }}</span>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section v-if="currentTab === 'profile'" class="panel-section">
+          <h1>Mi Perfil</h1>
+          <form class="profile-form" @submit.prevent="saveProfile">
+            <div class="form-group">
+              <label>Nombre completo</label>
+              <input v-model="profileForm.full_name" type="text" required>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input v-model="profileForm.email" type="email" required>
+            </div>
+
+            <div class="form-group">
+              <label>Nueva contraseña (opcional)</label>
+              <input v-model="profileForm.password" type="password">
+            </div>
+
+            <button type="submit" class="save-btn">Guardar cambios</button>
+          </form>
+        </section>
+      </template>
     </main>
+
+    <UserPetFormModal
+      :show="showPetModal"
+      :pet="editingPet"
+      @close="closePetModal"
+      @save="savePet"
+    />
+
+    <ApplicationDetailModal
+      :show="showApplicationModal"
+      :application="selectedApplication"
+      @close="closeApplicationModal"
+    />
+  </div>
 </template>
 
 <style scoped lang="scss">
-@use '../assets/styles/base/variables' as v;
+@use '@/assets/styles/base/variables' as v;
 
-.users-page {
-    background: v.$color-green-light;
-    min-height: 100vh;
+.panel-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #f5f7f9;
 }
 
-.users-hero {
-    padding: 60px 20px;
-    text-align: center;
-    background: linear-gradient(135deg, v.$color-green-dark 0%, v.$color-green-medium 100%);
-    color: white;
+.panel-content {
+  flex: 1;
+  padding: 20px;
+  background: #f5f7f9;
+  overflow-x: auto;
 
-    &__title {
-        font-family: v.$font-title;
-        font-size: 3rem;
-        margin-bottom: 15px;
-    }
-
-    &__subtitle {
-        font-family: v.$font-subtitle;
-        font-size: 1.3rem;
-        opacity: 0.9;
-    }
+  @media (min-width: 768px) {
+    padding: 30px;
+  }
 }
 
-.users-filters {
-    padding: 40px 20px;
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+.panel-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-.filters-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 800px;
-    margin: 0 auto;
-
-    @media (min-width: 768px) {
-        flex-direction: row;
-    }
+.panel-section h1 {
+  font-family: v.$font-title;
+  color: v.$color-green-dark;
+  margin-bottom: 16px;
+  font-size: 2rem;
 }
 
-.search-input, .role-select {
-    padding: 12px 20px;
-    border: 2px solid v.$color-green-medium;
-    border-radius: 8px;
+.loading {
+  font-family: v.$font-subtitle;
+  color: v.$color-green-dark;
+}
+
+.stats-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e8ecef;
+  padding: 20px;
+
+  h3 {
     font-family: v.$font-subtitle;
-    font-size: 1rem;
-    outline: none;
+    color: v.$color-green-dark;
+    margin-bottom: 10px;
+  }
 
-    &:focus {
-        border-color: v.$color-peach-dark;
-    }
-}
-
-.search-input {
-    flex: 2;
-}
-
-.role-select {
-    flex: 1;
-    cursor: pointer;
-}
-
-.users-list {
-    padding: 60px 20px;
+  p {
+    font-family: v.$font-title;
+    font-size: 2rem;
+    color: v.$color-peach-dark;
+    margin: 0;
+  }
 }
 
 .table-wrapper {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  background: #fff;
+  border-radius: 10px;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
 }
 
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
+.panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
 
-    thead {
-        background: v.$color-green-dark;
-        color: white;
-
-        th {
-            padding: 16px;
-            text-align: left;
-            font-family: v.$font-title;
-            font-weight: bold;
-        }
-    }
-
-    tbody {
-        tr {
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-
-            &:hover {
-                background: v.$color-green-light;
-            }
-        }
-
-        td {
-            padding: 16px;
-            font-family: v.$font-subtitle;
-            color: #333;
-        }
-    }
-}
-
-.role-badge {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    text-transform: uppercase;
-
-    &.admin { background-color: #fce4ec; color: #d81b60; }
-    &.vet { background-color: #e8eaf6; color: #3f51b5; }
-    &.user { background-color: #eeeeee; color: #616161; }
-}
-
-.loading, .no-results {
-    text-align: center;
+  th,
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
     font-family: v.$font-subtitle;
-    font-size: 1.2rem;
+    color: #1f2937;
+    text-align: left;
+  }
+
+  th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+  }
+}
+
+.panel-table--pets th,
+.panel-table--pets td {
+  vertical-align: middle;
+}
+
+.panel-table--pets th:nth-child(1),
+.panel-table--pets td:nth-child(1) {
+  width: 84px;
+}
+
+.panel-table--pets td:nth-child(2) {
+  font-weight: 700;
+}
+
+.panel-table--pets th:last-child,
+.panel-table--pets td:last-child {
+  width: 180px;
+}
+
+@media (max-width: 768px) {
+  .panel-table--pets {
+    min-width: 760px;
+  }
+}
+
+.pet-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pet-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.pet-card__image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #d1d5db;
+}
+
+.pet-card__name {
+  font-family: v.$font-title;
+  color: v.$color-green-dark;
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+
+.pet-card__body {
+  width: 100%;
+}
+
+.pet-card__line {
+  margin: 0 0 6px;
+  font-family: v.$font-subtitle;
+  color: #1f2937;
+}
+
+.pet-card__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.empty-state {
+  font-family: v.$font-subtitle;
+  color: #4b5563;
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.btn-small {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: v.$font-subtitle;
+  font-weight: v.$weight-bold;
+  cursor: pointer;
+}
+
+.btn-view {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.labs-cell {
+  background: #f8fafc;
+}
+
+.labs-list {
+  margin: 0;
+  padding-left: 18px;
+
+  li {
+    list-style: disc;
+    margin-bottom: 8px;
+    font-family: v.$font-subtitle;
+  }
+}
+
+.profile-form {
+  max-width: 680px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+
+  label {
+    font-family: v.$font-subtitle;
+    font-weight: v.$weight-bold;
     color: v.$color-green-dark;
-    padding: 60px 20px;
+    margin-bottom: 6px;
+  }
+
+  input,
+  select {
+    border: 2px solid v.$color-green-medium;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: v.$font-subtitle;
+  }
+}
+
+.save-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: v.$color-peach-medium;
+  color: v.$color-green-dark;
+  font-family: v.$font-subtitle;
+  font-weight: v.$weight-bold;
 }
 </style>

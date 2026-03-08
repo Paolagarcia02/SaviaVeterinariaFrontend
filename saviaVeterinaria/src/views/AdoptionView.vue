@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { usePetStore } from '@/stores/petStore';
 import { useRouter } from 'vue-router';
@@ -17,6 +17,11 @@ const loading = ref(false);
 
 const availablePets = ref<Pet[]>([]);
 const adoptionApplications = ref<AdoptionApplication[]>([]);
+
+const selectedPetId = computed(() => Number.parseInt(selectedPet.value, 10));
+const selectedPetData = computed(() =>
+  availablePets.value.find((pet) => pet.pet_id === selectedPetId.value)
+);
 
 onMounted(async () => {
   if (!authStore.isLogged) {
@@ -53,7 +58,7 @@ const handleSubmit = async () => {
 
   // Verificar si ya tiene una solicitud para esta mascota
   const existingApplication = adoptionApplications.value.find(
-    app => app.pet_id === parseInt(selectedPet.value) && app.status === 'Pendiente'
+    app => app.pet_id === selectedPetId.value && app.status === 'Pendiente'
   );
   
   if (existingApplication) {
@@ -69,7 +74,7 @@ const handleSubmit = async () => {
   try {
     await api.post('/AdoptionApplication', {
       user_id: authStore.userId,
-      pet_id: parseInt(selectedPet.value),
+      pet_id: selectedPetId.value,
       message: message.value,
       status: "Pendiente"
     });
@@ -120,13 +125,13 @@ const handleSubmit = async () => {
         <div v-if="selectedPet" class="pet-preview">
           <div class="pet-info">
             <img 
-              :src="availablePets.find(p => p.pet_id === parseInt(selectedPet))?.photo_url" 
-              :alt="availablePets.find(p => p.pet_id === parseInt(selectedPet))?.name"
+              :src="selectedPetData?.photo_url" 
+              :alt="selectedPetData?.name"
               class="pet-image"
             >
             <div class="pet-details">
-              <h3>{{ availablePets.find(p => p.pet_id === parseInt(selectedPet))?.name }}</h3>
-              <p>{{ availablePets.find(p => p.pet_id === parseInt(selectedPet))?.description }}</p>
+              <h3>{{ selectedPetData?.name }}</h3>
+              <p>{{ selectedPetData?.description }}</p>
             </div>
           </div>
         </div>
@@ -189,10 +194,10 @@ const handleSubmit = async () => {
 }
 
 .adoption-form {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  background: v.$color-green-light;
+  border: 2px solid v.$color-green-dark;
+  border-radius: 15px;
+  padding: 40px 30px;
 }
 
 .form-group {
@@ -202,7 +207,7 @@ const handleSubmit = async () => {
 .form-label {
   display: block;
   font-family: v.$font-subtitle;
-  font-weight: bold;
+  font-weight: v.$weight-bold;
   color: v.$color-green-dark;
   margin-bottom: 8px;
 }
@@ -216,6 +221,7 @@ const handleSubmit = async () => {
   font-family: v.$font-subtitle;
   font-size: 1rem;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.5);
 
   &:focus {
     outline: none;
@@ -228,7 +234,8 @@ const handleSubmit = async () => {
 }
 
 .pet-preview {
-  background: v.$color-green-light;
+  background: white;
+  border: 2px solid v.$color-green-medium;
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 25px;
@@ -250,6 +257,7 @@ const handleSubmit = async () => {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid v.$color-peach-medium;
 }
 
 .pet-details {
@@ -279,11 +287,12 @@ const handleSubmit = async () => {
 }
 
 .btn {
-  padding: 12px 24px;
+  padding: 10px 18px;
   border: none;
   border-radius: 8px;
   font-family: v.$font-title;
   font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;

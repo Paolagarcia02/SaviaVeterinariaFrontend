@@ -23,7 +23,12 @@ const handleLogin = async () => {
             password: password.value
         });
 
-        authStore.login(response.data.token, response.data.role, response.data.userId);
+        authStore.login(
+            response.data.token,
+            response.data.role,
+            response.data.userId,
+            response.data.franchiseId ?? response.data.franchise_id ?? response.data.FranchiseId
+        );
         
         Swal.fire({
             position: "top-end",
@@ -70,7 +75,7 @@ const handleLogin = async () => {
                     <button type="submit" class="btn btn--primary btn--full">Entrar</button>
 
                     <div class="login-footer">
-                        <a href="#" class="login-link">¿Olvidaste tu contraseña?</a>
+                        <span class="login-link login-link--disabled">¿Olvidaste tu contraseña?</span>
                         <p>¿Aún no tienes cuenta?
                             <router-link to="/auth/register" class="login-link login-link--bold">Regístrate
                                 aquí</router-link>
@@ -175,6 +180,11 @@ const handleLogin = async () => {
 
 .login-link--bold {
     font-weight: v.$weight-bold;
+}
+
+.login-link--disabled {
+    opacity: 0.7;
+    cursor: default;
 }
 
 .form-group {
