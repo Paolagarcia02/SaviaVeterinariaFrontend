@@ -12,9 +12,6 @@ const emit = defineEmits<{
 <template>
     <aside class="admin-sidebar">
         <div class="sidebar-header">
-            <div class="logo-wrapper">
-                <img src="@/assets/images/home/logoHomeSinFondo.png" class="sidebar-logo" alt="Logo">
-            </div>
             <h2 class="sidebar-title">{{ isUserPanel ? 'Mi Panel' : 'SAVIA Admin' }}</h2>
         </div>
 
@@ -29,11 +26,27 @@ const emit = defineEmits<{
                 </button>
 
                 <button 
+                    @click="emit('changeTab', 'profile')" 
+                    :class="['nav-item', { 'active': activeTab === 'profile' }]"
+                >
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Mi Perfil</span>
+                </button>
+
+                <button 
                     @click="emit('changeTab', 'pets')" 
                     :class="['nav-item', { 'active': activeTab === 'pets' }]"
                 >
                     <span class="nav-icon">🐾</span>
                     <span class="nav-text">Mis Mascotas</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'appointments')" 
+                    :class="['nav-item', { 'active': activeTab === 'appointments' }]"
+                >
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">Mis Citas</span>
                 </button>
 
                 <button 
@@ -43,7 +56,9 @@ const emit = defineEmits<{
                     <span class="nav-icon">📝</span>
                     <span class="nav-text">Solicitudes</span>
                 </button>
+            </template>
 
+            <template v-else>
                 <button 
                     @click="emit('changeTab', 'profile')" 
                     :class="['nav-item', { 'active': activeTab === 'profile' }]"
@@ -51,9 +66,39 @@ const emit = defineEmits<{
                     <span class="nav-icon">👤</span>
                     <span class="nav-text">Mi Perfil</span>
                 </button>
-            </template>
 
-            <template v-else>
+                <button 
+                    @click="emit('changeTab', 'franchises')" 
+                    :class="['nav-item', { 'active': activeTab === 'franchises' }]"
+                >
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-text">Franquicias</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'services')" 
+                    :class="['nav-item', { 'active': activeTab === 'services' }]"
+                >
+                    <span class="nav-icon">🩺</span>
+                    <span class="nav-text">Servicios</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'clinicRooms')" 
+                    :class="['nav-item', { 'active': activeTab === 'clinicRooms' }]"
+                >
+                    <span class="nav-icon">🏥</span>
+                    <span class="nav-text">Clinic Rooms</span>
+                </button>
+
+                <button
+                    @click="emit('changeTab', 'clinicSchedules')"
+                    :class="['nav-item', { 'active': activeTab === 'clinicSchedules' }]"
+                >
+                    <span class="nav-icon">🕒</span>
+                    <span class="nav-text">Horarios</span>
+                </button>
+
                 <button 
                     @click="emit('changeTab', 'pets')" 
                     :class="['nav-item', { 'active': activeTab === 'pets' }]"
@@ -68,6 +113,30 @@ const emit = defineEmits<{
                 >
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Usuarios</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'appointments')" 
+                    :class="['nav-item', { 'active': activeTab === 'appointments' }]"
+                >
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">Citas</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'labTests')" 
+                    :class="['nav-item', { 'active': activeTab === 'labTests' }]"
+                >
+                    <span class="nav-icon">🧪</span>
+                    <span class="nav-text">Lab Tests</span>
+                </button>
+
+                <button 
+                    @click="emit('changeTab', 'adoptionApplications')" 
+                    :class="['nav-item', { 'active': activeTab === 'adoptionApplications' }]"
+                >
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Adopciones</span>
                 </button>
             </template>
 
@@ -94,34 +163,21 @@ const emit = defineEmits<{
     display: flex;
     flex-direction: column;
     color: white;
+    overflow: hidden;
 }
 
 .sidebar-header {
-    padding: 40px 20px;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px; // Espacio entre logo y texto
+    gap: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-    .logo-wrapper {
-        width: 80px; // Tamaño fijo para el contenedor
-        height: 80px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .sidebar-logo {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
 
     .sidebar-title {
         font-family: v.$font-title;
         font-size: 1.4rem;
-        color: v.$color-peach-medium;
+        color: v.$color-white;
         margin: 0;
         text-align: center;
     }
@@ -132,6 +188,8 @@ const emit = defineEmits<{
     padding: 20px 0;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .nav-item {
@@ -142,7 +200,7 @@ const emit = defineEmits<{
     gap: 15px;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: v.$color-white;
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
@@ -155,8 +213,8 @@ const emit = defineEmits<{
 
     &.active {
         background-color: rgba(255, 255, 255, 0.1);
-        color: v.$color-peach-medium;
-        border-left: 5px solid v.$color-peach-medium;
+        color: v.$color-white;
+        border-left: 5px solid v.$color-white;
     }
 }
 

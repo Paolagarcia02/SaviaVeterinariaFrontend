@@ -36,7 +36,6 @@ const handleLogout = () => {
                     <router-link to="/contact" class="header__nav-link" @click="closeMenu">Contacto</router-link>
                     <router-link v-if="authStore.isLogged && !authStore.canAccessAdmin" to="/users" class="header__nav-link" @click="closeMenu">Mi Panel</router-link>
                     <router-link v-if="authStore.canAccessAdmin" to="/admin" class="header__nav-link header__nav-link--admin" @click="closeMenu">
-                        <img src="@/assets/images/home/admin.png" class="header__nav-icon" alt="">
                         Panel Admin
                     </router-link>
                 </nav>
@@ -139,7 +138,7 @@ const handleLogout = () => {
         }
 
         &--admin {
-            color: v.$color-peach-medium;
+            color: v.$color-white;
             font-weight: v.$weight-bold;
         }
 
@@ -147,12 +146,6 @@ const handleLogout = () => {
             padding: 8px 12px;
             border-radius: 4px;
         }
-    }
-
-    &__nav-icon {
-        width: 20px;
-        height: 20px;
-        filter: brightness(0) invert(1);
     }
 
     &__logo-link {

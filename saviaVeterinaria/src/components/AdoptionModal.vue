@@ -91,13 +91,14 @@ const handleSubmit = async () => {
             placeholder="Describe tu experiencia con mascotas, tu hogar, y por qué crees que serías un buen hogar para esta mascota..."
             required
           ></textarea>
+          <p class="form-help">Cuanta más información des, mejor podremos valorar tu solicitud.</p>
         </div>
 
         <div class="form-actions">
-          <button type="button" @click="emit('close')" class="btn btn--secondary">
+          <button type="button" @click="emit('close')" class="btn btn--secondary btn--small">
             Cancelar
           </button>
-          <button type="submit" :disabled="loading" class="btn btn--primary">
+          <button type="submit" :disabled="loading" class="btn btn--primary btn--small">
             {{ loading ? 'Enviando...' : 'Enviar solicitud' }}
           </button>
         </div>
@@ -115,7 +116,8 @@ const handleSubmit = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,80 +126,90 @@ const handleSubmit = async () => {
 }
 
 .modal-content {
-  background: white;
-  border-radius: 20px;
+  background: linear-gradient(160deg, #dcecd0 0%, #cde2c0 100%);
+  border: 1px solid #abc49d;
+  border-radius: 16px;
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 18px 35px rgba(35, 57, 44, 0.25);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 30px 20px;
-  border-bottom: 2px solid v.$color-green-light;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #b3cda5;
 }
 
 .modal-title {
   font-family: v.$font-title;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: v.$color-green-dark;
   margin: 0;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #b3cda5;
+  border-radius: 8px;
+  background: #e7f2de;
+  color: #3f5648;
+  font-size: 1.2rem;
   cursor: pointer;
-  color: #666;
-  padding: 5px;
-  
+  display: grid;
+  place-items: center;
+
   &:hover {
-    color: v.$color-peach-dark;
+    background: #ffd9bf;
+    color: #734531;
   }
 }
 
 .pet-summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 20px;
-  padding: 20px 30px;
-  background: v.$color-green-light;
-  margin: 0 30px;
-  border-radius: 15px;
+  padding: 14px;
+  background: #e8f2df;
+  margin: 16px 24px 0;
+  border-radius: 12px;
+  border: 1px solid #bfd6b2;
   align-items: center;
 }
 
 .pet-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
   object-fit: cover;
+  border: 1px solid #aac39d;
 }
 
 .pet-info {
   h3 {
     font-family: v.$font-title;
     color: v.$color-green-dark;
-    margin: 0 0 5px 0;
+    margin: 0 0 4px;
+    font-size: 1.3rem;
   }
 
   p {
     font-family: v.$font-subtitle;
-    color: #666;
+    color: #42544a;
     margin: 0;
   }
 }
 
 .adoption-form {
-  padding: 30px;
+  padding: 24px;
 }
 
 .form-group {
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 .form-label {
@@ -205,61 +217,85 @@ const handleSubmit = async () => {
   font-family: v.$font-subtitle;
   font-weight: v.$weight-bold;
   color: v.$color-green-dark;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .form-textarea {
   width: 100%;
-  padding: 15px;
-  border: 2px solid v.$color-green-medium;
+  min-height: 130px;
+  padding: 14px;
+  border: 1px solid #9fbc91;
   border-radius: 10px;
+  background: #f2f8ec;
   font-family: v.$font-subtitle;
   font-size: 1rem;
   resize: vertical;
   box-sizing: border-box;
+  color: #2c4134;
 
   &:focus {
     outline: none;
     border-color: v.$color-peach-dark;
+    box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.18);
   }
+}
+
+.form-help {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #4e6054;
 }
 
 .form-actions {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   justify-content: flex-end;
-}
+  align-items: center;
 
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-family: v.$font-title;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &--primary {
-    background-color: v.$color-peach-dark;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background-color: v.$color-peach-medium;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+  :deep(.btn) {
+    border: none;
+    min-width: 0;
+    font-size: 1rem;
+    padding: 10px 16px;
   }
 
-  &--secondary {
-    background-color: #f5f5f5;
-    color: #666;
+  :deep(button:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
 
-    &:hover {
-      background-color: #e0e0e0;
-    }
+@media (max-width: 640px) {
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 18px 18px 14px;
+  }
+
+  .modal-title {
+    font-size: 1.45rem;
+    max-width: 80%;
+  }
+
+  .pet-summary {
+    margin: 14px 18px 0;
+    gap: 12px;
+  }
+
+  .pet-image {
+    width: 72px;
+    height: 72px;
+  }
+
+  .adoption-form {
+    padding: 18px;
+  }
+
+  .form-actions {
+    justify-content: center;
   }
 }
 </style>

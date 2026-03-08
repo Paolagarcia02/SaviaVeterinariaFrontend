@@ -27,9 +27,9 @@
             <div class="footer__column">
                 <h3 class="footer__title">Legal</h3>
                 <ul class="footer__list">
-                    <li><a class="footer__link">Aviso Legal</a></li>
-                    <li><a class="footer__link">Privacidad</a></li>
-                    <li><a class="footer__link">Política de Cookies</a></li>
+                    <li><router-link to="/legal/aviso-legal" class="footer__link">Aviso Legal</router-link></li>
+                    <li><router-link to="/legal/privacidad" class="footer__link">Privacidad</router-link></li>
+                    <li><router-link to="/legal/cookies" class="footer__link">Política de Cookies</router-link></li>
                 </ul>
             </div>
 
