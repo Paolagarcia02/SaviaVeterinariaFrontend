@@ -37,15 +37,15 @@ export interface AdoptionApplication {
 
 export interface Appointment {
   appointment_id: number;
-  date_time: string;
+  date_time?: string | null;
   duration_minutes: number;
   reason: string;
   status: 'Pendiente' | 'Confirmada' | 'Completada' | 'Cancelada';
   notes?: string;
   pet_id: number;
-  vet_id: number;
+  vet_id?: number | null;
   franchise_id: number;
-  room_id?: number;
+  room_id?: number | null;
 }
 
 export interface LabTest {
@@ -81,5 +81,6 @@ export interface User {
     email: string;
     password?: string;
     role: 'Admin' | 'Vet' | 'User'; 
+    franchise_id?: number | null;
     created_at: string; 
 }

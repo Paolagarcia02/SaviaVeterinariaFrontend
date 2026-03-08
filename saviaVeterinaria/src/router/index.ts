@@ -15,6 +15,9 @@ const router = createRouter({
         { path: 'contact', name: 'contact', component: () => import('../views/ContactView.vue') },
         { path: 'appointment', name: 'appointment', component: () => import('../views/AppointmentView.vue') },
         { path: 'adoption', name: 'adoption', component: () => import('../views/AdoptionView.vue') },
+        { path: 'legal/aviso-legal', name: 'legalNotice', component: () => import('../views/LegalNoticeView.vue') },
+        { path: 'legal/privacidad', name: 'privacyPolicy', component: () => import('../views/PrivacyPolicyView.vue') },
+        { path: 'legal/cookies', name: 'cookiesPolicy', component: () => import('../views/CookiesPolicyView.vue') },
       ]
     },
     {
@@ -39,6 +42,11 @@ const router = createRouter({
       children: [
         { path : '', name: 'adminHome', component: () => import('../views/AdminView.vue') }
       ]
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'notFound',
+      component: () => import('../views/NotFoundView.vue')
     }
   ]
 });
