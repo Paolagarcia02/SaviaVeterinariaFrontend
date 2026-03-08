@@ -150,10 +150,25 @@ const deletePet = async (pet: Pet) => {
   }
 };
 
+const getApplicationPetName = (application: AdoptionApplication) => {
+  const directName =
+    (application as any).pet_name ||
+    (application as any).petName ||
+    (application as any).Pet_name ||
+    (application as any).PetName;
+
+  if (typeof directName === 'string' && directName.trim()) {
+    return directName.trim();
+  }
+
+  const pet = userPanelStore.pets.find((item) => item.pet_id === application.pet_id);
+  return pet ? pet.name : `Mascota #${application.pet_id}`;
+};
+
 const openApplicationDetail = (application: AdoptionApplication) => {
   selectedApplication.value = {
     ...application,
-    pet_name: getPetName(application.pet_id)
+    pet_name: getApplicationPetName(application)
   };
   showApplicationModal.value = true;
 };
@@ -291,7 +306,7 @@ const formatAppointmentDateTime = (value?: string | null) => {
               <tbody>
                 <tr v-for="application in userPanelStore.applications" :key="application.application_id">
                   <td>{{ application.application_id }}</td>
-                  <td>{{ getPetName(application.pet_id) }}</td>
+                  <td>{{ getApplicationPetName(application) }}</td>
                   <td>{{ application.status }}</td>
                   <td>{{ new Date(application.application_date).toLocaleDateString('es-ES') }}</td>
                   <td>
