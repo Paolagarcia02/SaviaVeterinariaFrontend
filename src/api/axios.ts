@@ -3,7 +3,7 @@ import axios from 'axios';
 const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
 const normalizedBaseUrl = rawBaseUrl
   ? (rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl.replace(/\/+$/, '')}/api`)
-  : 'http://saviaveterinaria.retocsv.es';
+  : 'http://aa978f882b8a44c19884d6a4c8843bdf-1625304351.us-east-1.elb.amazonaws.com/api';
 
 export const publicApi = axios.create({
   baseURL: normalizedBaseUrl
