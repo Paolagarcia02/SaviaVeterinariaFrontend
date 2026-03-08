@@ -51,6 +51,31 @@ const router = createRouter({
   ]
 });
 
+const routeTitleByName: Partial<Record<string, string>> = {
+  home: 'Inicio',
+  pets: 'Mascotas',
+  petDetail: 'Detalle de Mascota',
+  services: 'Servicios',
+  contact: 'Contacto',
+  appointment: 'Citas',
+  adoption: 'Adopción',
+  legalNotice: 'Aviso Legal',
+  privacyPolicy: 'Privacidad',
+  cookiesPolicy: 'Cookies',
+  login: 'Iniciar Sesión',
+  register: 'Registro',
+  users: 'Mi Panel',
+  admin: 'Panel Admin',
+  adminHome: 'Panel Admin',
+  notFound: 'Página no encontrada'
+};
+
+router.afterEach((to) => {
+  const key = typeof to.name === 'string' ? to.name : '';
+  const sectionTitle = routeTitleByName[key] || 'Savia Veterinaria';
+  document.title = `${sectionTitle} | Savia Veterinaria`;
+});
+
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   
