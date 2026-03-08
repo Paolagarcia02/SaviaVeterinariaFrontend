@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '@/stores/authStore';
 import { useUserPanelStore } from '@/stores/userPanelStore';
+import { publicApi } from '@/api/axios';
 import AdminSidebar from '@/components/Admin/AdminSidebar.vue';
 import UserPetFormModal from '@/components/UserPanel/UserPetFormModal.vue';
 import ApplicationDetailModal from '@/components/UserPanel/ApplicationDetailModal.vue';
@@ -34,6 +35,7 @@ const showApplicationModal = ref(false);
 const selectedApplication = ref<AdoptionApplication | null>(null);
 
 const expandedAppointmentId = ref<number | null>(null);
+const publicPetNamesById = ref<Record<number, string>>({});
 
 const profileForm = ref({
   full_name: '',
@@ -53,7 +55,10 @@ const appointmentList = computed(() => {
 
 const loadPanel = async () => {
   try {
-    await userPanelStore.fetchAll(authStore.userId);
+    await Promise.all([
+      userPanelStore.fetchAll(authStore.userId),
+      loadPublicPetNames()
+    ]);
 
     if (userPanelStore.profile) {
       profileForm.value.full_name = userPanelStore.profile.full_name;
@@ -68,6 +73,23 @@ const loadPanel = async () => {
       title: 'Error',
       text: 'No se pudo cargar tu panel.'
     });
+  }
+};
+
+const loadPublicPetNames = async () => {
+  try {
+    const response = await publicApi.get('/Pet');
+    const list = Array.isArray(response.data) ? response.data : [];
+    publicPetNamesById.value = list.reduce((acc: Record<number, string>, pet: any) => {
+      const petId = Number(pet?.pet_id);
+      const name = typeof pet?.name === 'string' ? pet.name.trim() : '';
+      if (Number.isFinite(petId) && name) {
+        acc[petId] = name;
+      }
+      return acc;
+    }, {});
+  } catch {
+    publicPetNamesById.value = {};
   }
 };
 
@@ -162,7 +184,10 @@ const getApplicationPetName = (application: AdoptionApplication) => {
   }
 
   const pet = userPanelStore.pets.find((item) => item.pet_id === application.pet_id);
-  return pet ? pet.name : `Mascota #${application.pet_id}`;
+  if (pet) return pet.name;
+
+  const publicName = publicPetNamesById.value[application.pet_id];
+  return publicName || `Mascota #${application.pet_id}`;
 };
 
 const openApplicationDetail = (application: AdoptionApplication) => {
