@@ -28,7 +28,7 @@ const filteredPets = computed(() => {
 
     // Filtrar por estado si no es "all"
     if (selectedStatus.value !== 'all') {
-        result = result.filter(pet => pet.status === selectedStatus.value);
+        result = result.filter((pet) => pet.status === selectedStatus.value);
     }
 
     // Filtrar por texto de búsqueda (nombre o especie)

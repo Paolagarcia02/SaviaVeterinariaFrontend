@@ -1,6 +1,16 @@
 import { defineStore } from 'pinia';
-import api from '@/api/axios';
+import { publicApi } from '@/api/axios';
 import type { Pet } from '../models/type';
+
+const normalizeText = (value: string) =>
+  value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const normalizePetStatus = (status: string): Pet['status'] => {
+  const normalized = normalizeText(status);
+  if (normalized === 'en adopcion') return 'En Adopción';
+  if (normalized === 'adoptado') return 'Adoptado';
+  return 'Con Dueño';
+};
 
 // Store para manejar las mascotas
 export const usePetStore = defineStore('petStore', {
@@ -14,7 +24,7 @@ export const usePetStore = defineStore('petStore', {
     randomAdoptions: (state): Pet[] => {
       if (state.pets.length === 0) return [];
 
-      const candidates = state.pets.filter(pet => pet.status === 'En Adopción');
+      const candidates = state.pets.filter((pet) => pet.status === 'En Adopción');
 
       return [...candidates]
         .sort(() => Math.random() - 0.5) // Mezcla aleatoria
@@ -27,8 +37,12 @@ export const usePetStore = defineStore('petStore', {
     async fetchPets() {
       this.loading = true;
       try {
-        const response = await api.get('/Pet');
-        this.pets = response.data;
+        // El catálogo público no debe depender del token de sesión.
+        const response = await publicApi.get('/Pet');
+        this.pets = (response.data as Pet[]).map((pet) => ({
+          ...pet,
+          status: normalizePetStatus(pet.status)
+        }));
       } catch (error) {
         console.error('Error fetching pets:', error);
       } finally {

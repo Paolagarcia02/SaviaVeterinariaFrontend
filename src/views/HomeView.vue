@@ -43,7 +43,7 @@ const loadDailyQuote = async () => {
 };
 
 const filteredPets = computed(() => {
-    return petStore.pets.filter(pet => pet.status === carouselFilter.value);
+    return petStore.pets.filter((pet) => pet.status === carouselFilter.value);
 });
 
 // Cuando la página se monta, cargamos las mascotas

@@ -34,7 +34,7 @@ onMounted(async () => {
 
 const loadAvailablePets = async () => {
   await petStore.fetchPets();
-  availablePets.value = petStore.pets.filter(pet => pet.status === 'En Adopción');
+  availablePets.value = petStore.pets.filter((pet) => pet.status === 'En Adopción');
 };
 
 const loadUserApplications = async () => {

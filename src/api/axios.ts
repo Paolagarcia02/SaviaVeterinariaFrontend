@@ -5,6 +5,10 @@ const normalizedBaseUrl = rawBaseUrl
   ? (rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl.replace(/\/+$/, '')}/api`)
   : 'http://aa978f882b8a44c19884d6a4c8843bdf-1625304351.us-east-1.elb.amazonaws.com/api';
 
+export const publicApi = axios.create({
+  baseURL: normalizedBaseUrl
+});
+
 // Creamos una instancia de axios configurada para nuestro backend
 const api = axios.create({
   baseURL: normalizedBaseUrl
