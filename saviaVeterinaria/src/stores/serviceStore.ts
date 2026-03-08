@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import api from '@/api/axios';
 
 export interface Service {
   service_id: number;
@@ -18,8 +18,7 @@ export const useServiceStore = defineStore('serviceStore', {
     async fetchServices() {
       this.loading = true;
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8407';
-        const response = await axios.get(`${baseURL}/api/Service`);
+        const response = await api.get('/Service');
         this.services = response.data;
       } catch (error) {
         console.error('Error fetching services:', error);

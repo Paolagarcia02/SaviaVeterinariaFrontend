@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import api from '@/api/axios';
 
 export interface Franchise {
   franchise_id: number;
@@ -19,8 +19,7 @@ export const useFranchiseStore = defineStore('franchiseStore', {
     async fetchFranchises() {
       this.loading = true;
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8407';
-        const response = await axios.get(`${baseURL}/api/Franchise`);
+        const response = await api.get('/Franchise');
         this.franchises = response.data;
       } catch (error) {
         console.error('Error fetching franchises:', error);

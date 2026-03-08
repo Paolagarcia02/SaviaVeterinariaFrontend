@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import api from '@/api/axios';
 import type { Pet } from '../models/type';
 
 // Store para manejar las mascotas
@@ -27,8 +27,7 @@ export const usePetStore = defineStore('petStore', {
     async fetchPets() {
       this.loading = true;
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8407';
-        const response = await axios.get(`${baseURL}/api/Pet`);
+        const response = await api.get('/Pet');
         this.pets = response.data;
       } catch (error) {
         console.error('Error fetching pets:', error);
