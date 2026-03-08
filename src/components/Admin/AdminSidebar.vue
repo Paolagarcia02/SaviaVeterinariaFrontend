@@ -218,9 +218,59 @@ const emit = defineEmits<{
     }
 }
 
+.nav-icon {
+    min-width: 24px;
+    text-align: center;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.nav-text {
+    white-space: nowrap;
+}
+
 .sidebar-divider {
     height: 1px;
     background-color: rgba(255, 255, 255, 0.1);
     margin: 20px 25px;
+}
+
+@media (max-width: 768px) {
+    .admin-sidebar {
+        width: 72px;
+        min-width: 72px;
+    }
+
+    .sidebar-header {
+        display: none;
+    }
+
+    .sidebar-nav {
+        padding: 12px 0;
+        align-items: center;
+    }
+
+    .nav-item {
+        width: 56px;
+        justify-content: center;
+        padding: 14px 0;
+        gap: 0;
+        border-radius: 12px;
+    }
+
+    .nav-item.active {
+        border-left: none;
+        outline: 2px solid rgba(255, 255, 255, 0.55);
+        outline-offset: -2px;
+    }
+
+    .nav-text {
+        display: none;
+    }
+
+    .sidebar-divider {
+        width: 40px;
+        margin: 12px 0;
+    }
 }
 </style>
