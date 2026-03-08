@@ -1,13 +1,18 @@
 import axios from 'axios';
 
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
+const normalizedBaseUrl = rawBaseUrl
+  ? (rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl.replace(/\/+$/, '')}/api`)
+  : 'http://localhost:8407/api';
+
 // Creamos una instancia de axios configurada para nuestro backend
 const api = axios.create({
-  baseURL: 'http://localhost:8407/api' // URL base del backend
+  baseURL: normalizedBaseUrl
 });
 
 // Interceptor: añade automáticamente el token JWT a todas las peticiones
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
         // Añadimos el token en el header Authorization
         config.headers.Authorization = `Bearer ${token}`;
